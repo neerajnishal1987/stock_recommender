@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StockPulse | Daily Market Analysis</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Market Intelligence</p>
+          <h1>StockPulse</h1>
+        </div>
+        <button class="primary-btn">Daily Brief</button>
+      </header>
+
+      <main class="dashboard">
+        <section class="hero card">
+          <div>
+            <p class="label">Market snapshot</p>
+            <h2>Big movers and the stories behind them</h2>
+            <p class="muted">
+              Track stocks with sharp daily jumps or drops and connect the move to
+              macro catalysts, earnings, and breaking news.
+            </p>
+          </div>
+          <div class="hero-metrics">
+            <div>
+              <span>S&amp;P 500</span>
+              <strong>+1.42%</strong>
+            </div>
+            <div>
+              <span>NASDAQ</span>
+              <strong>+1.81%</strong>
+            </div>
+            <div>
+              <span>VIX</span>
+              <strong>14.6</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="toolbar card">
+          <div class="search-box">
+            <label for="symbolInput">Quick symbol lookup</label>
+            <div class="search-row">
+              <input id="symbolInput" type="text" placeholder="e.g. NVDA" maxlength="10" />
+              <button id="searchBtn" class="primary-btn">Analyze</button>
+            </div>
+          </div>
+          <div class="filter-box">
+            <label for="moveFilter">Filter by move</label>
+            <select id="moveFilter">
+              <option value="all">All movers</option>
+              <option value="up">Big gainers</option>
+              <option value="down">Big losers</option>
+            </select>
+          </div>
+        </section>
+
+        <section class="movers-grid">
+          <div class="card panel">
+            <div class="panel-header">
+              <h3>Top gainers</h3>
+              <span class="badge positive">Bullish</span>
+            </div>
+            <div id="gainersList" class="stock-list"></div>
+          </div>
+
+          <div class="card panel">
+            <div class="panel-header">
+              <h3>Top losers</h3>
+              <span class="badge negative">Pressured</span>
+            </div>
+            <div id="losersList" class="stock-list"></div>
+          </div>
+        </section>
+
+        <section class="details-grid">
+          <article id="stockDetail" class="card detail-panel"></article>
+          <aside class="card sentiment-panel">
+            <div class="panel-header">
+              <h3>Daily catalyst map</h3>
+              <span class="badge neutral">News-linked</span>
+            </div>
+            <ul id="catalystList" class="catalyst-list"></ul>
+          </aside>
+        </section>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
