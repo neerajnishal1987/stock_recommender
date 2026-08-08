@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StockAlerts | Market Drop Monitor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📉</text></svg>">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-shell">
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">Real-time Market Monitoring</p>
+                <h1>StockAlerts</h1>
+                <p class="muted">Monitor stocks, mutual funds, ETFs, commodities & bitcoin. Get email alerts when an asset drops 5%+ from its day's high.</p>
+            </div>
+            <div id="statusBadge" class="status-badge neutral">Connecting…</div>
+        </header>
+
+        <main>
+            <!-- Filters -->
+            <section class="card filters-card">
+                <h2>Filters</h2>
+                <div class="filter-grid">
+                    <!-- Country -->
+                    <div class="filter-group">
+                        <label for="countryFilter">Target Country</label>
+                        <select id="countryFilter">
+                            <option value="all">All</option>
+                            <option value="IN" selected>India</option>
+                            <option value="US">United States</option>
+                        </select>
+                    </div>
+
+                    <!-- Asset type -->
+                    <div class="filter-group">
+                        <label for="assetFilter">Asset Type</label>
+                        <select id="assetFilter">
+                            <option value="all" selected>All</option>
+                            <option value="stock">Direct Stock</option>
+                            <option value="mutual_fund">Mutual Fund</option>
+                            <option value="etf">ETF</option>
+                            <option value="commodity">Commodities</option>
+                            <option value="crypto">Bitcoin / Crypto</option>
+                        </select>
+                    </div>
+
+                    <!-- Stock cap -->
+                    <div class="filter-group hidden" id="stockCapGroup">
+                        <label for="stockCapFilter">Stock Market Cap</label>
+                        <select id="stockCapFilter">
+                            <option value="all">All</option>
+                            <option value="largecap">Large Cap</option>
+                            <option value="midcap">Mid Cap</option>
+                            <option value="smallcap">Small Cap</option>
+                        </select>
+                    </div>
+
+                    <!-- MF / ETF category -->
+                    <div class="filter-group hidden" id="mfEtfGroup">
+                        <label for="categoryFilter">Category</label>
+                        <select id="categoryFilter">
+                            <option value="all">All</option>
+                            <option value="equity_large">Equity – Large</option>
+                            <option value="equity_small">Equity – Small</option>
+                            <option value="equity_mid">Equity – Mid</option>
+                            <option value="debt">Debt Funds</option>
+                            <option value="liquid">Liquid Funds</option>
+                            <option value="credit_risk">Credit Risk Funds</option>
+                            <option value="index">Index</option>
+                            <option value="sector">Sector</option>
+                            <option value="gold">Gold</option>
+                            <option value="bond">Bond</option>
+                            <option value="growth">Growth</option>
+                            <option value="dividend">Dividend</option>
+                        </select>
+                    </div>
+
+                    <!-- Commodity -->
+                    <div class="filter-group hidden" id="commodityGroup">
+                        <label for="commodityFilter">Commodity</label>
+                        <select id="commodityFilter">
+                            <option value="all">All</option>
+                            <option value="Gold">Gold</option>
+                            <option value="Silver">Silver</option>
+                            <option value="Crude Oil (WTI)">Crude Oil (WTI)</option>
+                            <option value="Brent Crude">Brent Crude</option>
+                            <option value="Natural Gas">Natural Gas</option>
+                            <option value="Copper">Copper</option>
+                            <option value="Corn">Corn</option>
+                            <option value="Wheat">Wheat</option>
+                        </select>
+                    </div>
+
+                    <!-- Crypto -->
+                    <div class="filter-group hidden" id="cryptoGroup">
+                        <label for="cryptoFilter">Crypto</label>
+                        <select id="cryptoFilter">
+                            <option value="all">All</option>
+                            <option value="bitcoin" selected>Bitcoin</option>
+                            <option value="ethereum">Ethereum</option>
+                            <option value="solana">Solana</option>
+                        </select>
+                    </div>
+                </div>
+                <button id="applyFiltersBtn" class="primary-btn">Apply Filters</button>
+            </section>
+
+            <!-- Market data table -->
+            <section class="card">
+                <div class="panel-header">
+                    <h2>Market Data</h2>
+                    <span id="resultCount" class="badge neutral">0 assets</span>
+                </div>
+                <div class="table-wrap">
+                    <table id="marketTable">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Symbol</th>
+                                <th>Type</th>
+                                <th>Country</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Day High</th>
+                                <th>Day Low</th>
+                                <th>% Off High</th>
+                                <th>Change %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="marketBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Recent alerts -->
+            <section class="card">
+                <div class="panel-header">
+                    <h2>Recent Drop Alerts</h2>
+                    <span class="badge negative">Live</span>
+                </div>
+                <div id="alertsList" class="alerts-list"></div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Data refreshed daily via GitHub Actions. Alerts email <strong>neerajnishal@gmail.com</strong> when an asset drops ≥5% from its day's high.</p>
+        </footer>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

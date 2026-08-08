@@ -1,0 +1,13 @@
+[build]
+  publish = "web"
+  command = "echo 'Static dashboard — no build step needed'"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

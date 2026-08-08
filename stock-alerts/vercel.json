@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "name": "stockalerts",
+  "description": "StockAlerts — market drop monitor dashboard",
+  "builds": [
+    {
+      "src": "web/index.html",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "headers": { "Cache-Control": "no-cache" },
+      "dest": "/web/$1"
+    }
+  ],
+  "cleanOutputs": true
+}

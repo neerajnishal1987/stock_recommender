@@ -1,0 +1,40 @@
+name: Daily Data Refresh
+
+on:
+  schedule:
+    # Run every 4 hours. Tune as needed (cron uses UTC).
+    - cron: "0 */4 * * *"
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyYAML urllib3
+          # yfinance + deps required for refresh
+          pip install yfinance
+          pip install -r stock-alerts/requirements.txt
+
+      - name: Load catalog (seed instruments)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          python stock-alerts/scripts/load_catalog.py
+
+      - name: Refresh market data
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          python stock-alerts/scripts/refresh_data.py

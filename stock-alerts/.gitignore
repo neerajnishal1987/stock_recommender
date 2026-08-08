@@ -1,0 +1,25 @@
+# Env / secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# OS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Supabase local files (if using supabase CLI)
+supabase/.temp/
+
+# Node (if any)
+node_modules/
