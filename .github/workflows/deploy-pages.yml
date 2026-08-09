@@ -4,10 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - "index.html"
-      - "app.js"
-      - "styles.css"
-      - "README.md"
+      - "stock-alerts/web/**"
   workflow_dispatch:
 
 permissions:
@@ -31,7 +28,7 @@ jobs:
       - name: Copy web assets
         run: |
           mkdir -p _site
-          cp index.html app.js styles.css README.md _site/
+          cp -r stock-alerts/web/* _site/
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
