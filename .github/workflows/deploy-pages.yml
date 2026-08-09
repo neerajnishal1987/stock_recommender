@@ -4,10 +4,10 @@ on:
   push:
     branches: [main]
     paths:
-      - "Stock_Recommender/index.html"
-      - "Stock_Recommender/app.js"
-      - "Stock_Recommender/styles.css"
-      - "Stock_Recommender/README.md"
+      - "index.html"
+      - "app.js"
+      - "styles.css"
+      - "README.md"
   workflow_dispatch:
 
 permissions:
@@ -33,7 +33,7 @@ jobs:
       - name: Copy web assets
         run: |
           mkdir -p _site
-          cp -r Stock_Recommender/* _site/
+          cp -r . _site/
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
