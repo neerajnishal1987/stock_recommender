@@ -3,13 +3,15 @@ name: Deploy to GitHub Pages
 # Auto-deploy the static dashboard to GitHub Pages on every push to main.
 # The dashboard reads Supabase directly via the anon key in web/config.js,
 # so no backend server is needed for the frontend.
+#
+# Requires: repo Settings -> Pages -> Source = "GitHub Actions".
 
 on:
   push:
     branches: [main]
     paths:
-      - "Stock_Recommender/stock-alerts/web/**"
-      - "Stock_Recommender/stock-alerts/.github/workflows/deploy-pages.yml"
+      - "web/**"
+      - ".github/workflows/deploy-pages.yml"
   workflow_dispatch:
 
 permissions:
@@ -22,26 +24,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Set up Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          node-version: "20"
+          path: web
 
-      - name: Copy web assets
-        run: |
-          mkdir -p _site
-          cp -r Stock_Recommender/stock-alerts/web/* _site/
-
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./_site
-          cname: investorspider.com
-          # Keep history so the custom domain persists
-          keep_files: false
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -34,13 +34,23 @@
     // ---------- Data fetch: local API (serve.py) OR direct Supabase REST ----------
     async function supabaseFetch(path) {
         const url = `${SUPABASE_URL}/rest/v1/${path}`;
-        const resp = await fetch(url, {
-            headers: {
-                "apikey": SUPABASE_ANON,
-                "Authorization": `Bearer ${SUPABASE_ANON}`,
-            },
-        });
-        if (!resp.ok) throw new Error(`Supabase error ${resp.status}`);
+        let resp;
+        try {
+            resp = await fetch(url, {
+                headers: {
+                    "apikey": SUPABASE_ANON,
+                    "Authorization": `Bearer ${SUPABASE_ANON}`,
+                },
+            });
+        } catch (networkErr) {
+            // DNS / CORS / offline — surface the real reason
+            throw new Error(`Network error on ${path}: ${networkErr.message}`);
+        }
+        if (!resp.ok) {
+            let detail = "";
+            try { detail = (await resp.text()).slice(0, 200); } catch (_) {}
+            throw new Error(`Supabase ${resp.status} on ${path} — ${detail}`);
+        }
         return resp.json();
     }
 
@@ -69,7 +79,7 @@
         const [inst, mdata, alertRows] = await Promise.all([
             supabaseFetch("instruments?select=*&is_active=eq.true"),
             supabaseFetch("market_data?select=*&order=as_of.desc&limit=500"),
-            supabaseFetch("alerts?select=*&order=detected_at.desc&limit=20"),
+            supabaseFetch("alerts?select=*&order=detected_at.desc&limit=100"),
         ]);
         return [inst || [], mdata || [], alertRows || []];
     }
@@ -87,7 +97,7 @@
             applyFilters();
             renderAlerts();
         } catch (e) {
-            console.error(e);
+            console.error("StockAlerts load failed:", e);
             setStatus("Connection failed", "error");
             renderConfigMessage();
         }
@@ -97,20 +107,28 @@
         if (IS_LOCAL) {
             marketBody.innerHTML = `<tr><td colspan="10" class="empty">Could not reach the local API. Start the Flask server (<code>python3 serve.py</code>) and ensure Supabase is configured in <code>.env</code>.</td></tr>`;
         } else {
-            marketBody.innerHTML = `<tr><td colspan="10" class="empty">Set your Supabase URL & anon key in <code>config.js</code> to load market data.</td></tr>`;
+            marketBody.innerHTML = `<tr><td colspan="10" class="empty">Could not load market data from Supabase. Check your connection, the anon key in <code>config.js</code>, and that the tables exist. <button id="retryBtn" class="secondary-btn">Retry</button></td></tr>`;
+            const rb = document.getElementById("retryBtn");
+            if (rb) rb.addEventListener("click", () => { init(); });
         }
     }
 
     function setStatus(text, cls) {
         statusBadge.textContent = text;
         statusBadge.className = "status-badge " + cls;
+        statusBadge.style.cursor = "pointer";
+        statusBadge.onclick = () => init();
+        statusBadge.title = "Click to retry";
     }
 
     // Newest market_data row per instrument
     function buildLatestMap() {
         latestByInstrument = {};
+        if (!Array.isArray(marketData)) return;
         for (const row of marketData) {
+            if (!row || typeof row !== "object") continue; // skip malformed rows
             const rid = row.instrument_id;
+            if (rid == null) continue;
             if (!latestByInstrument[rid] || (row.as_of || "") > (latestByInstrument[rid].as_of || "")) {
                 latestByInstrument[rid] = row;
             }
@@ -139,7 +157,7 @@
         const crypt = cryptoFilter.value;
 
         let rows = instruments.map((inst) => {
-            const md = latestByInstrument[inst.id] || {};
+            const md = (inst && latestByInstrument[inst.id]) || {};
             return { ...inst, md };
         });
 
@@ -202,21 +220,56 @@
         }).join("");
     }
 
+    function filteredAlerts() {
+        const country = countryFilter.value;
+        const type = assetFilter.value;
+        let rows = alerts.slice();
+        rows.sort((a, b) => (b.detected_at || "") < (a.detected_at || "") ? -1 : ((b.detected_at || "") > (a.detected_at || "") ? 1 : 0));
+        if (country !== "all" || type !== "all") {
+            rows = rows.filter((a) => {
+                const inst = instruments.find((i) => i.id === a.instrument_id);
+                if (!inst) return false;
+                if (country !== "all" && inst.country !== country) return false;
+                if (type !== "all") {
+                    if (type === "stock" && inst.asset_type !== "stock") return false;
+                    if (type === "mutual_fund" && inst.asset_type !== "mutual_fund") return false;
+                    if (type === "etf" && inst.asset_type !== "etf") return false;
+                    if (type === "commodity" && inst.asset_type !== "commodity") return false;
+                    if (type === "crypto" && inst.asset_type !== "crypto") return false;
+                }
+                return true;
+            });
+        }
+        return rows.slice(0, 5);
+    }
+
     function renderAlerts() {
-        if (!alerts.length) {
-            alertsList.innerHTML = `<p class="muted">No drop alerts yet.</p>`;
+        const rows = filteredAlerts();
+        const header = $("alertsHeader");
+        if (header) {
+            header.textContent = rows.length
+                ? (countryFilter.value === "all" && assetFilter.value === "all"
+                    ? "Top 5 Recent Drop Alerts"
+                    : `Top 5 Alerts (${labelType(assetFilter.value)} / ${countryFilter.value === "all" ? "All countries" : countryFilter.value})`)
+                : "Recent Drop Alerts";
+        }
+        if (!rows.length) {
+            alertsList.innerHTML = `<p class="muted">No drop alerts yet. They will appear here once detected.</p>`;
             return;
         }
-        alertsList.innerHTML = alerts.map((a) => {
+        alertsList.innerHTML = rows.map((a) => {
             const inst = instruments.find((i) => i.id === a.instrument_id);
             const name = inst ? inst.name : "Unknown";
             const sym = inst ? inst.symbol : "";
+            const ctry = inst ? inst.country : "";
+            const atype = inst ? labelType(inst.asset_type) : "";
             const summary = (a.groq_analysis || "No analysis available")
                 .split("\n").filter((l) => l.trim()).slice(0, 6).join(" | ");
             return `<div class="alert-item ${a.status === 'email_sent' ? 'emailed' : ''}">
                 <div class="alert-head">
                     <strong>${escapeHtml(name)} (${escapeHtml(sym)})</strong>
                     <span class="badge negative">-${Number(a.drop_pct).toFixed(2)}%</span>
+                    <span class="alert-meta">${escapeHtml(atype)} · ${escapeHtml(ctry)}</span>
                     <span class="alert-status">${a.status === 'email_sent' ? '📧 emailed' : 'new'}</span>
                 </div>
                 <p class="alert-time">${fmtDate(a.detected_at)}</p>
@@ -263,10 +316,23 @@
     }
 
     // ---------- Events ----------
-    applyBtn.addEventListener("click", () => {
-        applyFilters();
-        renderAlerts();
-    });
+    // Auto-apply on any filter change, and always render safely (log to console
+    // on failure so issues are diagnosable without blanking the table).
+    function safeRender() {
+        try {
+            applyFilters();
+            renderAlerts();
+        } catch (e) {
+            console.error("StockAlerts render failed:", e);
+        }
+    }
+
+    [countryFilter, assetFilter, stockCapFilter, categoryFilter, commodityFilter, cryptoFilter]
+        .forEach((el) => el && el.addEventListener("change", () => {
+            updateFilterVisibility();
+            safeRender();
+        }));
+    applyBtn.addEventListener("click", safeRender);
 
     // ---------- Start ----------
     updateFilterVisibility();

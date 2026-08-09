@@ -29,6 +29,10 @@ class Settings:
     # Drop alert threshold: trigger when an asset drops this % from its day's high
     DROP_THRESHOLD_PCT = _get_float("DROP_THRESHOLD_PCT", 5.0)
 
+    # Concise mode: emit a short icon-rich email (Executive + Price + Sector/Peers
+    # + 3Y/5Y + Final View) instead of the full 13-section research report.
+    CONCISE_MODE = os.getenv("CONCISE_MODE", "false").lower() in ("1", "true", "yes", "on")
+
     # YFinance / market data
     USER_AGENT = os.getenv("USER_AGENT", "StockAlerts/1.0")
 

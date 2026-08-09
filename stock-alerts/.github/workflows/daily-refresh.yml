@@ -23,18 +23,18 @@ jobs:
           pip install pyYAML urllib3
           # yfinance + deps required for refresh
           pip install yfinance
-          pip install -r stock-alerts/requirements.txt
+          pip install -r requirements.txt
 
       - name: Load catalog (seed instruments)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
-          python stock-alerts/scripts/load_catalog.py
+          python scripts/load_catalog.py
 
       - name: Refresh market data
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
-          python stock-alerts/scripts/refresh_data.py
+          python scripts/refresh_data.py
